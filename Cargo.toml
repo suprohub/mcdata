@@ -17,7 +17,7 @@ unexpected_cfgs = { level = "warn", check-cfg = ['cfg(CHANNEL_NIGHTLY)'] }
 
 [features]
 #! ## Features
-default = []
+default = ["serde"]
 
 ## Provide implementations of serde's `Serialize` and `Deserialize` traits for the various types
 serde = ["dep:serde", "bounded-integer/serde1", "either/serde"]

@@ -22,23 +22,23 @@ pub trait BlockEntity: Clone {
 /// A generic block entity that can represent _any_ block entity by storing its
 /// [position](Self::pos) and [raw NBT](Self::properties).
 #[derive(Clone, Debug, PartialEq)]
-pub struct GenericBlockEntity {
+pub struct GenericBlockEntity<'a> {
     /// The ID of this block entity.
     ///
     /// Note that litematica had a bug [introduced in version `1.18.0-0.9.0`](https://github.com/maruohon/litematica/commit/8f58911524852b5c8edeb8b185ec5751201599a2#diff-334964871b9057033353e22bf7656fa45612087ccca6d59dee71cb8956e9a304)
     /// which was only [fixed in `1.20.1-0.15.3`](https://github.com/maruohon/litematica/commit/a156bf6ba80f81196b62aaa069589c5c4010fabe)
     /// that caused the block entity IDs to not be included in saved schematics. When deserializing
     /// from one such schematic, this field will be an empty string.
-    pub id: Cow<'static, str>,
+    pub id: Cow<'a, str>,
 
     /// The [`BlockPos`] of this block entity.
     pub pos: BlockPos,
 
     /// The raw NBT properties of this block entity.
-    pub properties: HashMap<Cow<'static, str>, fastnbt::Value>,
+    pub properties: HashMap<Cow<'a, str>, fastnbt::Value>,
 }
 
-impl BlockEntity for GenericBlockEntity {
+impl BlockEntity for GenericBlockEntity<'_> {
     fn position(&self) -> BlockPos {
         self.pos
     }
@@ -63,17 +63,17 @@ impl BlockEntity for fastnbt::Value {
 }
 
 #[cfg(feature = "serde")]
-impl<'de> serde::Deserialize<'de> for GenericBlockEntity {
+impl<'a, 'de> serde::Deserialize<'de> for GenericBlockEntity<'a> {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,
     {
-        struct _Visitor<'de> {
-            marker: PhantomData<GenericBlockEntity>,
+        struct _Visitor<'a, 'de> {
+            marker: PhantomData<GenericBlockEntity<'a>>,
             lifetime: PhantomData<&'de ()>,
         }
-        impl<'de> serde::de::Visitor<'de> for _Visitor<'de> {
-            type Value = GenericBlockEntity;
+        impl<'a, 'de> serde::de::Visitor<'de> for _Visitor<'a, 'de> {
+            type Value = GenericBlockEntity<'a>;
 
             fn expecting(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
                 fmt.write_str("BlockEntity")
@@ -132,14 +132,14 @@ impl<'de> serde::Deserialize<'de> for GenericBlockEntity {
         }
 
         deserializer.deserialize_map(_Visitor {
-            marker: PhantomData::<GenericBlockEntity>,
+            marker: PhantomData::<GenericBlockEntity<'a>>,
             lifetime: PhantomData,
         })
     }
 }
 
 #[cfg(feature = "serde")]
-impl serde::Serialize for GenericBlockEntity {
+impl serde::Serialize for GenericBlockEntity<'_> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,

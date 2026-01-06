@@ -19,16 +19,16 @@ pub trait BlockState: Clone + PartialEq + Sized {
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "serde", serde(rename_all = "PascalCase"))]
-pub struct GenericBlockState {
+pub struct GenericBlockState<'a> {
     /// The id of this block, e.g. `minecraft:air`.
-    pub name: Cow<'static, str>,
+    pub name: Cow<'a, str>,
 
     /// The properties of this block state as a map from names to values.
     #[cfg_attr(feature = "serde", serde(default))]
-    pub properties: HashMap<Cow<'static, str>, Cow<'static, str>>,
+    pub properties: HashMap<Cow<'a, str>, Cow<'a, str>>,
 }
 
-impl BlockState for GenericBlockState {
+impl BlockState for GenericBlockState<'_> {
     fn air() -> Self {
         Self {
             name: "minecraft:air".into(),

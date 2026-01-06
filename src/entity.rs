@@ -19,31 +19,31 @@ pub trait Entity: Clone {}
 // TODO: try to make this use `Cow<'a, str>` again
 // TODO: at least replace `String`s with `Cow<'static, str>`s
 #[derive(Debug, Clone, PartialEq)]
-pub struct GenericEntity {
+pub struct GenericEntity<'a> {
     /// The id of this entity, e.g. `minecraft:cow`.
-    pub id: Cow<'static, str>,
+    pub id: Cow<'a, str>,
     /// The UUID of this entity, stored as a 128-bit integer.
     pub uuid: u128,
     /// The raw NBT properties of this entity.
-    pub properties: HashMap<Cow<'static, str>, fastnbt::Value>,
+    pub properties: HashMap<Cow<'a, str>, fastnbt::Value>,
 }
 
-impl Entity for GenericEntity {}
+impl Entity for GenericEntity<'_> {}
 
 impl Entity for fastnbt::Value {}
 
 #[cfg(feature = "serde")]
-impl<'de> serde::Deserialize<'de> for GenericEntity {
+impl<'a, 'de> serde::Deserialize<'de> for GenericEntity<'a> {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,
     {
-        struct _Visitor<'de> {
-            marker: PhantomData<GenericEntity>,
+        struct _Visitor<'a, 'de> {
+            marker: PhantomData<GenericEntity<'a>>,
             lifetime: PhantomData<&'de ()>,
         }
-        impl<'de> serde::de::Visitor<'de> for _Visitor<'de> {
-            type Value = GenericEntity;
+        impl<'a, 'de> serde::de::Visitor<'de> for _Visitor<'a, 'de> {
+            type Value = GenericEntity<'a>;
 
             fn expecting(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
                 fmt.write_str("Entity")
@@ -86,14 +86,14 @@ impl<'de> serde::Deserialize<'de> for GenericEntity {
         }
 
         deserializer.deserialize_map(_Visitor {
-            marker: PhantomData::<GenericEntity>,
+            marker: PhantomData::<GenericEntity<'a>>,
             lifetime: PhantomData,
         })
     }
 }
 
 #[cfg(feature = "serde")]
-impl serde::Serialize for GenericEntity {
+impl serde::Serialize for GenericEntity<'_> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
