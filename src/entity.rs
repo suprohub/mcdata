@@ -16,8 +16,6 @@ pub trait Entity: Clone {}
 
 /// A generic entity that can represent _any_ possible entity with state by storing its
 /// [id](Self::id), [UUID](Self::uuid), and [raw NBT](Self::properties).
-// TODO: try to make this use `Cow<'a, str>` again
-// TODO: at least replace `String`s with `Cow<'static, str>`s
 #[derive(Debug, Clone, PartialEq)]
 pub struct GenericEntity<'a> {
     /// The id of this entity, e.g. `minecraft:cow`.
@@ -56,7 +54,7 @@ impl<'a, 'de> serde::Deserialize<'de> for GenericEntity<'a> {
                 let mut id = None;
                 let mut uuid = None;
                 let mut properties = HashMap::new();
-                while let Some(key) = map.next_key::<Cow<'static, str>>()? {
+                while let Some(key) = map.next_key::<Cow<'a, str>>()? {
                     match key.as_ref() {
                         "id" => {
                             if id.is_some() {

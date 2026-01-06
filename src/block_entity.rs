@@ -88,7 +88,7 @@ impl<'a, 'de> serde::Deserialize<'de> for GenericBlockEntity<'a> {
                 let mut y = None;
                 let mut z = None;
                 let mut properties = HashMap::new();
-                while let Some(key) = map.next_key::<Cow<'static, str>>()? {
+                while let Some(key) = map.next_key::<Cow<'a, str>>()? {
                     match key.as_ref() {
                         "id" => {
                             if id.is_some() {

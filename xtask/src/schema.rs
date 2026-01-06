@@ -67,54 +67,54 @@ pub struct Enum {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct EntitiesJson {
-    pub entities: Vec<Entity>,
-    pub types: Vec<EntityType>,
-    pub compound_types: Vec<CompoundType>,
+pub struct EntitiesJson<'a> {
+    pub entities: Vec<Entity<'a>>,
+    pub types: Vec<EntityType<'a>>,
+    pub compound_types: Vec<CompoundType<'a>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Entity {
-    pub id: String,
+pub struct Entity<'a> {
+    pub id: Cow<'a, str>,
     #[serde(rename = "type")]
-    pub type_: String,
+    pub type_: Cow<'a, str>,
     #[serde(default)]
     pub experimental: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct EntityType {
-    pub name: String,
-    pub parent: Option<String>,
-    pub nbt: NbtCompound,
+pub struct EntityType<'a> {
+    pub name: Cow<'a, str>,
+    pub parent: Option<Cow<'a, str>>,
+    pub nbt: NbtCompound<'a>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct NbtCompound {
-    pub entries: BTreeMap<String, NbtCompoundEntry>,
-    pub unknown_keys: Option<NbtElement>,
+pub struct NbtCompound<'a> {
+    pub entries: BTreeMap<String, NbtCompoundEntry<'a>>,
+    pub unknown_keys: Option<NbtElement<'a>>,
     #[serde(default)]
-    pub flattened: Vec<NbtElement>,
+    pub flattened: Vec<NbtElement<'a>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CompoundType {
+pub struct CompoundType<'a> {
     pub name: String,
     #[serde(flatten)]
-    pub compound: NbtCompound,
+    pub compound: NbtCompound<'a>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct NbtCompoundEntry {
-    pub value: NbtElement,
+pub struct NbtCompoundEntry<'a> {
+    pub value: NbtElement<'a>,
     #[serde(default)]
     pub optional: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type")]
-pub enum NbtElement {
+pub enum NbtElement<'a> {
     Any,
     Byte,
     Short,
@@ -129,28 +129,28 @@ pub enum NbtElement {
     Uuid,
     Boolean,
     Either {
-        left: Box<NbtElement>,
-        right: Box<NbtElement>,
+        left: Box<NbtElement<'a>>,
+        right: Box<NbtElement<'a>>,
     },
     List {
-        inner: Box<NbtElement>,
+        inner: Box<NbtElement<'a>>,
     },
     AnyCompound {
         #[serde(rename = "valueType")]
-        value_type: Box<NbtElement>,
+        value_type: Box<NbtElement<'a>>,
     },
     Compound {
-        name: String,
+        name: Cow<'a, str>,
     },
     Boxed {
-        name: String,
+        name: Cow<'a, str>,
     },
     NestedEntity,
     BlockState,
 }
 
-impl NbtElement {
-    pub fn as_rust_type(&self) -> Cow<'static, str> {
+impl<'a> NbtElement<'a> {
+    pub fn as_rust_type(&self) -> Cow<'a, str> {
         match self {
             NbtElement::Any => "fastnbt::Value".into(),
             NbtElement::Byte => "i8".into(),
@@ -159,7 +159,6 @@ impl NbtElement {
             NbtElement::Long => "i64".into(),
             NbtElement::Float => "f32".into(),
             NbtElement::Double => "f64".into(),
-            // TODO: try to use Cow<'a, str>?
             NbtElement::String => "CowStr".into(),
             NbtElement::ByteArray => "fastnbt::ByteArray".into(),
             NbtElement::IntArray => "fastnbt::IntArray".into(),

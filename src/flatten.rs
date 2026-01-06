@@ -8,21 +8,21 @@ use serde::{
 };
 
 #[allow(unused)]
-pub(crate) fn flatten(entity: &impl Flatten) -> HashMap<Cow<'static, str>, fastnbt::Value> {
+pub(crate) fn flatten<'a>(entity: &impl Flatten<'a>) -> HashMap<Cow<'a, str>, fastnbt::Value> {
     let mut map = HashMap::new();
     entity.flatten(&mut map);
     map
 }
 
-pub(crate) trait Flatten {
-    fn flatten(&self, map: &mut HashMap<Cow<'static, str>, fastnbt::Value>);
+pub(crate) trait Flatten<'a> {
+    fn flatten(&self, map: &mut HashMap<Cow<'a, str>, fastnbt::Value>);
 }
 
-impl<V> Flatten for HashMap<String, V>
+impl<'a, V> Flatten<'a> for HashMap<String, V>
 where
     V: serde::Serialize,
 {
-    fn flatten(&self, map: &mut HashMap<Cow<'static, str>, fastnbt::Value>) {
+    fn flatten(&self, map: &mut HashMap<Cow<'a, str>, fastnbt::Value>) {
         for (k, v) in self {
             map.insert(k.clone().into(), fastnbt::to_value(v).unwrap());
         }
